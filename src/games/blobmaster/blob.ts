@@ -9,9 +9,7 @@ import { IBlobState, ITileState } from "./state-interfaces";
 
 // <<-- Creer-Merge: imports -->>
 // any additional imports you want can be added here safely between Creer runs
-import * as Color from "color";
 import { ease } from "src/utils";
-import { Player } from "./player";
 // <<-- /Creer-Merge: imports -->>
 
 // <<-- Creer-Merge: should-render -->>
@@ -53,10 +51,6 @@ export class Blob extends makeRenderable(GameObject, SHOULD_RENDER) {
         // <<-- Creer-Merge: constructor -->>
         // You can initialize your new Blob here.
         this.container.setParent(this.game.layers.game);
-
-        if (state.owner) {
-            this.owner = this.game.gameObjects[state.owner.id] as Player;
-        }
 
         this.blobmasterSprite = this.addSprite.blobmaster();
         this.blobmasterSprite.visible = false;
@@ -116,20 +110,25 @@ export class Blob extends makeRenderable(GameObject, SHOULD_RENDER) {
         this.wallSprite.visible = false;
         if (next.isBlobmaster) {
             this.blobmasterSprite.visible = true;
+            this.blobmasterSprite.tint = rgb;
         } else if (next.owner && next.turnsTillHardened === -1) {
             if (current.size === 1) {
                 this.blob1Sprite.visible = true;
+                this.blob1Sprite.tint = rgb;
             } else if (current.size === 3) {
                 this.blob3Sprite.visible = true;
+                this.blob3Sprite.tint = rgb;
                 this.blob3Sprite.scale.x = this.blob1Sprite.scale.x;
                 this.blob3Sprite.scale.y = this.blob1Sprite.scale.y;
             } else {
                 this.blob3Sprite.visible = true;
+                this.blob3Sprite.tint = rgb;
                 this.blob3Sprite.scale.x = this.blob1Sprite.scale.x * (current.size / 3);
                 this.blob3Sprite.scale.y = this.blob1Sprite.scale.y * (current.size / 3);
             }
         } else {
             this.wallSprite.visible = true;
+            this.wallSprite.tint = rgb;
             this.wallSprite.scale.x = this.blob1Sprite.scale.x * current.size;
             this.wallSprite.scale.y = this.blob1Sprite.scale.y * current.size;
         }
