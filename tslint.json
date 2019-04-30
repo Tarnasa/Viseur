@@ -1,6 +1,12 @@
 {
     "extends": [ "@cadre/ts-utils/tslint.json" ],
     "rules": {
+        "completed-docs": false,
+        "brace-style": [2, "1tbs", { "allowSingleLine": true }],
+        "one-line": [true, "check-open-brace"],
+        "type-literal-delimiter": false,
+        "prefer-conditional-expression": false,
+        "newline-before-return": false,
         "no-import-side-effect": [true, {
             "ignore-module": "(\\.html|\\.(s?)css)$"
         }]

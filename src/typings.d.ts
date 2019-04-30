@@ -23,8 +23,10 @@ declare module "*.hbs" {
 
 declare module "*.json" {
     const _: {
+        /* tslint:disable:no-any */
         [key: number]: any;
         [key: string]: any;
+        /* tslint:enable:no-any */
     };
 
     export = _;
