@@ -9,6 +9,7 @@ export const GameResources = createResources("Blobmaster", {
     blob1: load("blob1.png"),
     blob2: load("blob2.png"),
     blob3: load("blob3.png"),
-    dried_blob: load("dried_blob.png"),
+    hardened1: load("dried_blob.png"),
+    hardened3: load("hardened3.png"),
     // <<-- /Creer-Merge: resources -->>
 });

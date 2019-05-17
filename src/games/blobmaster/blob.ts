@@ -35,7 +35,8 @@ export class Blob extends makeRenderable(GameObject, SHOULD_RENDER) {
     public blobmasterSprite: PIXI.Sprite;
     public blob1Sprite: PIXI.Sprite;
     public blob3Sprite: PIXI.Sprite;
-    public wallSprite: PIXI.Sprite;
+    public hardened1: PIXI.Sprite;
+    public hardened3: PIXI.Sprite;
     // <<-- /Creer-Merge: variables -->>
 
     /**
@@ -60,8 +61,10 @@ export class Blob extends makeRenderable(GameObject, SHOULD_RENDER) {
             relativeScale: 3,
         });
         this.blob3Sprite.visible = false;
-        this.wallSprite = this.addSprite.dried_blob();
-        this.wallSprite.visible = false;
+        this.hardened1 = this.addSprite.hardened1();
+        this.hardened1.visible = false;
+        this.hardened3 = this.addSprite.hardened3();
+        this.hardened3.visible = false;
 
         if (state.tile) {
             this.container.position.set(state.tile.x, state.tile.y);
@@ -107,7 +110,8 @@ export class Blob extends makeRenderable(GameObject, SHOULD_RENDER) {
         this.blobmasterSprite.visible = false;
         this.blob1Sprite.visible = false;
         this.blob3Sprite.visible = false;
-        this.wallSprite.visible = false;
+        this.hardened1.visible = false;
+        this.hardened3.visible = false;
         if (next.isBlobmaster) {
             this.blobmasterSprite.visible = true;
             this.blobmasterSprite.tint = rgb;
@@ -127,10 +131,15 @@ export class Blob extends makeRenderable(GameObject, SHOULD_RENDER) {
                 this.blob3Sprite.scale.y = this.blob1Sprite.scale.y * (current.size / 3);
             }
         } else {
-            this.wallSprite.visible = true;
-            this.wallSprite.tint = rgb;
-            this.wallSprite.scale.x = this.blob1Sprite.scale.x * current.size;
-            this.wallSprite.scale.y = this.blob1Sprite.scale.y * current.size;
+            if (current.size === 1) {
+                this.hardened1.visible = true;
+                this.hardened1.tint = rgb;
+            } else {
+                this.hardened3.visible = true;
+                this.hardened3.tint = rgb;
+                this.hardened3.scale.x = this.blob1Sprite.scale.x * (current.size / 3);
+                this.hardened3.scale.y = this.blob1Sprite.scale.y * (current.size / 3);
+            }
         }
 
         if (!next.tile) {

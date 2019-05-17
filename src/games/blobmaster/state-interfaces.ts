@@ -100,9 +100,19 @@ export interface IGameState extends IBaseGame {
     maxSlimeSpawnedOnTile: number;
 
     /**
+     * The maximum number of walls spawned at the start of the match.
+     */
+    maxStartingWalls: number;
+
+    /**
      * The maximum number of turns before the game will automatically end.
      */
     maxTurns: number;
+
+    /**
+     * The minimum number of walls spawned at the start of the match.
+     */
+    minStartingWalls: number;
 
     /**
      * It takes the ceiling of this many turns times the number tiles away from
