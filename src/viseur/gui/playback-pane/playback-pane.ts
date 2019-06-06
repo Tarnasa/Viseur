@@ -4,7 +4,7 @@ import { DisableableElement } from "src/core/ui/disableable-element";
 import * as inputs from "src/core/ui/inputs";
 import { Viseur } from "src/viseur";
 import { viseurConstructed } from "src/viseur/constructed";
-import { IGamelogWithReverses } from "src/viseur/game/gamelog";
+import { IGamelogWithReverses, IViseurGamelog } from "src/viseur/game/gamelog";
 import { Event, events, Signal } from "ts-typed-events";
 import { KEYS } from "../keys";
 import * as playbackPaneHbs from "./playback-pane.hbs";
@@ -35,6 +35,9 @@ export class PlaybackPane extends BaseElement {
 
     /** The number of deltas in the gamelog */
     private numberOfDeltas: number = 0;
+
+    /** The number of turns in the gamelog */
+    private numberOfTurns: number = 0;
 
     /** If all the inputs are disabled */
     private disabled: boolean = false;
@@ -209,7 +212,8 @@ export class PlaybackPane extends BaseElement {
             });
 
             this.viseur.events.gamelogUpdated.on((gamelog) => {
-                this.updatePlaybackSlider(gamelog);
+                this.updateTimepointsFromGamelog(gamelog);
+                this.updatePlaybackSlider();
             });
 
             this.viseur.events.gamelogFinalized.on(() => {
@@ -237,6 +241,21 @@ export class PlaybackPane extends BaseElement {
     }
 
     /**
+     * Runs through every delta in the gamelog to find the maximal turn number
+     * @param gamelog to get the number of turns of
+     * @returns The number of turns in the gamelog
+     */
+    private getNumberOfTurnsInGamelog(gamelog: Immutable<IGamelogWithReverses>): number {
+        let turns = -1;
+        for (const delta of gamelog.deltas) {
+            if (delta.game && delta.game.currentTurn !== undefined && delta.game.currentTurn as number > turns) {
+                turns = delta.game.currentTurn as number;
+            }
+        }
+        return turns + 1;
+    }
+
+    /**
      * Invoked when the gamelog is loaded.
      *
      * @param gamelog - The gamelog that was loaded.
@@ -247,6 +266,7 @@ export class PlaybackPane extends BaseElement {
         }
 
         this.numberOfDeltas = gamelog.deltas.length;
+        this.numberOfTurns = this.getNumberOfTurnsInGamelog(gamelog);
 
         if (!gamelog.streaming) {
             this.enable();
@@ -254,25 +274,48 @@ export class PlaybackPane extends BaseElement {
         else {
             this.speedSlider.enable(); // While streaming the gamelog only enable the speed slider
             this.viseur.events.gamelogFinalized.on((data) => {
-                this.numberOfDeltas = data.gamelog.deltas.length;
+                this.updateTimepointsFromGamelog(data.gamelog);
+                this.updatePlaybackSlider();
             });
         }
 
         this.playbackSlider.value = 0;
-        this.updatePlaybackSlider(gamelog);
+        this.updateTimepointsFromGamelog(gamelog);
+        this.updatePlaybackSlider();
 
         this.element.removeClass("collapsed");
     }
 
     /**
-     * Invoked when the gamelog's number of deltas is known or changes.
+     * Depending on playback mode, return the maximum "number" the slider can reach
+     * @returns The maximum value on the slider
+     */
+    private getMaxSliderValue(): number {
+        if (this.viseur && this.viseur.settings.playbackMode.get() === "turns") {
+            return this.numberOfTurns - 1;
+        } else {
+            return this.numberOfDeltas - 1;
+        }
+    }
+
+    /**
+     * Updates numberOfDeltas and numberOfTurns from the given gamelog
+     * @param gamelog to gather deltas and turns from
+     */
+    private updateTimepointsFromGamelog(gamelog: Immutable<IViseurGamelog>): void {
+        this.numberOfDeltas = gamelog.deltas.length;
+        this.numberOfTurns = this.getNumberOfTurnsInGamelog(gamelog);
+    }
+
+    /**
+     * Invoked when the gamelog's number of deltas/turns is known or changes.
      *
      * @param gamelog - the gamelog to get info from
      */
-    private updatePlaybackSlider(gamelog: Immutable<IGamelogWithReverses>): void {
-        this.playbackSlider.setMax(gamelog.deltas.length - 1 / 1e10); // basically round down a bit
-
-        this.playbackTimeMaxElement.html(String(gamelog.deltas.length - 1));
+    private updatePlaybackSlider(): void {
+        const max = this.getMaxSliderValue();
+        this.playbackSlider.setMax(max + 1 - 1 / 1e10); // basically round down a bit
+        this.playbackTimeMaxElement.html(String(max));
     }
 
     /**
@@ -284,6 +327,7 @@ export class PlaybackPane extends BaseElement {
         const m = mode.toLowerCase();
         this.turnsButton.element.toggleClass("active", m === "turns");
         this.deltasButton.element.toggleClass("active", m === "deltas");
+        this.updatePlaybackSlider();
     }
 
     /**
@@ -306,7 +350,7 @@ export class PlaybackPane extends BaseElement {
                 this.backButton.enable();
             }
 
-            if (index >= (this.numberOfDeltas - 1)) {
+            if (index >= (this.getMaxSliderValue())) {
                 this.nextButton.disable();
             }
             else {
