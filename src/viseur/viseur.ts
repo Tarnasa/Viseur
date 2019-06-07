@@ -484,7 +484,7 @@ export class Viseur {
      * @param index the new states index, must be between [0, deltas.length]
      */
     private updateCurrentState(index: number): void {
-        if (this.settings.playbackMode.get() == 'turns') {
+        if (this.settings.playbackMode.get() === "turns") {
             this.updateCurrentTurn(index);
         } else {
             this.updateCurrentDelta(index);
@@ -565,16 +565,20 @@ export class Viseur {
     }
 
     /**
+     * Returns the current turn number from the given game state
+     * USES EVIL MAGIC TO ASSUME THE GAME IS TURN-BASED
      * @param state the state to retrieve the turn number from.
      * @returns turn number of the given state.
      */
     private getTurnNumber(state: IBaseGame): number {
+        /* tslint:disable */
         // @ts-ignore
         if (state['currentTurn'] === undefined) {
             return -1;
         }
         // @ts-ignore
         return state['currentTurn'] as number;
+        /* tslint:enable */
     }
 
     /**
@@ -636,7 +640,7 @@ export class Viseur {
 
         // Update next state
         if (!d.nextState) {
-            throw new Error('no next state');
+            throw new Error("no next state");
         }
         let nextTurn = this.getTurnNumber(d.nextState);
         // Update next state backward to the current turn
@@ -661,7 +665,8 @@ export class Viseur {
             }
 
             if (deltas[d.indexOfNextTurn] && !deltas[d.indexOfNextTurn].reversed) {
-                deltas[d.indexOfNextTurn].reversed = this.parser.createReverseDelta(d.nextState, deltas[d.indexOfNextTurn].game);
+                deltas[d.indexOfNextTurn].reversed = this.parser.createReverseDelta(d.nextState,
+                    deltas[d.indexOfNextTurn].game);
             }
 
             if (deltas[d.indexOfNextTurn]) {
@@ -670,7 +675,7 @@ export class Viseur {
             }
         }
 
-        if (d.index != originalIndex) {
+        if (d.index !== originalIndex) {
             this.updateStepped(d);
             this.events.stateChanged.emit(this.currentState);
         }
