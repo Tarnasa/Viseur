@@ -6,7 +6,8 @@ import { IBaseGame, IBaseGameObject, IBasePlayer } from "@cadre/ts-utils/cadre";
 // tslint:disable:no-empty-interface
 
 /**
- * Collect slime and cover the battlefield with dropped blobs to win.
+ * Move around to collect slime and cover the battlefield with ever-bigger blobs
+ * to win.
  */
 export interface IGameState extends IBaseGame {
     /**
@@ -15,14 +16,14 @@ export interface IGameState extends IBaseGame {
     bigBlobSpeed: number;
 
     /**
-     * How much slime it costs to spawn a blob.
+     * The E in the blob cost formula Mx**E.
      */
-    blobCost: number;
+    blobCostExponent: number;
 
     /**
-     * Every blob costs its owner this amount of slime every turn.
+     * The M in the blob cost formula Mx**E.
      */
-    blobUpkeep: number;
+    blobCostMultiplier: number;
 
     /**
      * Every Blobmaster in the game.
@@ -63,17 +64,6 @@ export interface IGameState extends IBaseGame {
     gameObjects: {[id: string]: IGameObjectState};
 
     /**
-     * The amount of slime given back to a blob's owner when it turns into a
-     * wall.
-     */
-    hardenReward: number;
-
-    /**
-     * The number of turns it takes a blob to harden into a wall.
-     */
-    hardenTime: number;
-
-    /**
      * The number of Tiles in the map along the y (vertical) axis.
      */
     mapHeight: number;
@@ -84,7 +74,7 @@ export interface IGameState extends IBaseGame {
     mapWidth: number;
 
     /**
-     * A Blobmaster can drop at most this many blobs per turn.
+     * A Player can drop at most this many blobs per turn.
      */
     maxDropsPerTurn: number;
 
@@ -100,7 +90,7 @@ export interface IGameState extends IBaseGame {
     maxSlimeSpawnedOnTile: number;
 
     /**
-     * The maximum number of walls spawned at the start of the match.
+     * The maximum number of neutral blobs spawned at the start of the match.
      */
     maxStartingWalls: number;
 
@@ -110,7 +100,7 @@ export interface IGameState extends IBaseGame {
     maxTurns: number;
 
     /**
-     * The minimum number of walls spawned at the start of the match.
+     * The minimum number of neutral blobs spawned at the start of the match.
      */
     minStartingWalls: number;
 
@@ -163,22 +153,12 @@ export interface IGameState extends IBaseGame {
      */
     timeAddedPerTurn: number;
 
-    /**
-     * The number of turns a hardened blob wall lasts.
-     */
-    wallLifespan: number;
-
 }
 
 /**
  * A Blob.  Can move and collect slime.
  */
 export interface IBlobState extends IGameObjectState {
-    /**
-     * How many more Blobs this Blobmaster can spawn this turn.
-     */
-    dropsLeft: number;
-
     /**
      * Whether this Blob is a Blobmaster.
      */
@@ -209,16 +189,6 @@ export interface IBlobState extends IGameObjectState {
      * The top-left (smallest x,y) Tile that this Blob occupies.
      */
     tile: ITileState;
-
-    /**
-     * How many more turns till this wall disappears, or negative.
-     */
-    turnsTillDead: number;
-
-    /**
-     * How many more turns till this blob becomes a wall, or negative.
-     */
-    turnsTillHardened: number;
 
 }
 
@@ -273,6 +243,11 @@ export interface IPlayerState extends IGameObjectState, IBasePlayer {
      * which simultaneous drops are handled.
      */
     drops: ITileState[];
+
+    /**
+     * How many more Blobs this Player can drop this turn.
+     */
+    dropsLeft: number;
 
     /**
      * If the player lost the game or not.
