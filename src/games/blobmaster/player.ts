@@ -5,13 +5,14 @@ import { Immutable } from "src/utils";
 import { Viseur } from "src/viseur";
 import { makeRenderable } from "src/viseur/game";
 import { GameObject } from "./game-object";
-import { IPlayerState } from "./state-interfaces";
+import { IPlayerState, ITileState } from "./state-interfaces";
 
 // <<-- Creer-Merge: imports -->>
 // any additional imports you want can be added here safely between Creer runs
 // <<-- /Creer-Merge: imports -->>
 
 // <<-- Creer-Merge: should-render -->>
+// Set this variable to `true`, if this class should render.
 const SHOULD_RENDER = undefined;
 // <<-- /Creer-Merge: should-render -->>
 
@@ -124,6 +125,23 @@ export class Player extends makeRenderable(GameObject, SHOULD_RENDER) {
     // <<-- Creer-Merge: public-functions -->>
     // You can add additional public functions here
     // <<-- /Creer-Merge: public-functions -->>
+
+    // <Joueur functions> --- functions invoked for human playable client
+    // NOTE: These functions are only used 99% of the time if the game supports human playable clients (like Chess).
+    //       If it does not, feel free to ignore these Joueur functions.
+
+    /**
+     * Spawns a Blob in the air above the given tile.
+     * @param tile The Tile to spawn a Blob on.
+     * @param callback? The callback that eventually returns the return value
+     * from the server. - The returned value is True if the drop worked, false
+     * otherwise.
+     */
+    public drop(tile: ITileState, callback?: (returned: boolean) => void): void {
+        this.runOnServer("drop", {tile}, callback);
+    }
+
+    // </Joueur functions>
 
     // <<-- Creer-Merge: protected-private-functions -->>
     // You can add additional protected/private functions here

@@ -115,7 +115,7 @@ export class Blob extends makeRenderable(GameObject, SHOULD_RENDER) {
         if (next.isBlobmaster) {
             this.blobmasterSprite.visible = true;
             this.blobmasterSprite.tint = rgb;
-        } else if (next.owner && next.turnsTillHardened === -1) {
+        } else {
             if (current.size === 1) {
                 this.blob1Sprite.visible = true;
                 this.blob1Sprite.tint = rgb;
@@ -130,18 +130,7 @@ export class Blob extends makeRenderable(GameObject, SHOULD_RENDER) {
                 this.blob3Sprite.scale.x = this.blob1Sprite.scale.x * (current.size / 3);
                 this.blob3Sprite.scale.y = this.blob1Sprite.scale.y * (current.size / 3);
             }
-        } else {
-            if (current.size === 1) {
-                this.hardened1.visible = true;
-                this.hardened1.tint = rgb;
-            } else {
-                this.hardened3.visible = true;
-                this.hardened3.tint = rgb;
-                this.hardened3.scale.x = this.blob1Sprite.scale.x * (current.size / 3);
-                this.hardened3.scale.y = this.blob1Sprite.scale.y * (current.size / 3);
-            }
         }
-
         if (!next.tile) {
             this.container.visible = false;
             return;
@@ -213,27 +202,6 @@ export class Blob extends makeRenderable(GameObject, SHOULD_RENDER) {
     //       If it does not, feel free to ignore these Joueur functions.
 
     /**
-     * Spawns a Blob in the air above the given tile.
-     * @param tile The Tile to spawn a Blob on.
-     * @param callback? The callback that eventually returns the return value
-     * from the server. - The returned value is True if the drop worked, false
-     * otherwise.
-     */
-    public drop(tile: ITileState, callback?: (returned: boolean) => void): void {
-        this.runOnServer("drop", {tile}, callback);
-    }
-
-    /**
-     * Initiates the process of hardening this blob into a wall.
-     * @param callback? The callback that eventually returns the return value
-     * from the server. - The returned value is True if the harden worked, false
-     * otherwise.
-     */
-    public harden(callback?: (returned: boolean) => void): void {
-        this.runOnServer("harden", {}, callback);
-    }
-
-    /**
      * Moves this Blob onto the given tile.
      * @param tile The tile for this Blob to move onto.
      * @param callback? The callback that eventually returns the return value
@@ -242,6 +210,17 @@ export class Blob extends makeRenderable(GameObject, SHOULD_RENDER) {
      */
     public move(tile: ITileState, callback?: (returned: boolean) => void): void {
         this.runOnServer("move", {tile}, callback);
+    }
+
+    /**
+     * Swaps this Blob with an adjacent blob.
+     * @param blob The blob to swap with.
+     * @param callback? The callback that eventually returns the return value
+     * from the server. - The returned value is True if the swap worked, false
+     * otherwise.
+     */
+    public swap(blob: IBlobState, callback?: (returned: boolean) => void): void {
+        this.runOnServer("swap", {blob}, callback);
     }
 
     // </Joueur functions>

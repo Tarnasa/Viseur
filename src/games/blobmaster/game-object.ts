@@ -13,6 +13,7 @@ import { IGameObjectState } from "./state-interfaces";
 // <<-- /Creer-Merge: imports -->>
 
 // <<-- Creer-Merge: should-render -->>
+// Set this variable to `true`, if this class should render.
 const SHOULD_RENDER = undefined;
 // <<-- /Creer-Merge: should-render -->>
 
