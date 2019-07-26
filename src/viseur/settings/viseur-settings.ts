@@ -56,7 +56,7 @@ Playback speed is generally increased in Turns mode.`,
             { text: "Deltas", value: "deltas" },
             { text: "Turns", value: "turns" },
         ],
-        default: "deltas",
+        default: "turns",
     }),
     resolutionScale: new Setting.NumberSetting({
         id: "resolution-scale",
