@@ -9,6 +9,7 @@ import { ITileState } from "./state-interfaces";
 
 // <<-- Creer-Merge: imports -->>
 // any additional imports you want can be added here safely between Creer runs
+import { ease } from "src/utils";
 // <<-- /Creer-Merge: imports -->>
 
 // <<-- Creer-Merge: should-render -->>
@@ -100,7 +101,8 @@ export class Tile extends makeRenderable(GameObject, SHOULD_RENDER) {
         this.floor.visible = false;
         if (this.current) {
             // let slimeRatio = current.slime / (current.game.maxSlimeSpawnedOnTile + current.game.deathSlime);
-            const slimeRatio = next.slime / (20 + 10);
+            const slime = ease(current.slime, next.slime, dt);
+            const slimeRatio = Math.min(1.0, slime / (20 + 10));
             const red = Math.ceil((1 - slimeRatio) * 200);
             const blue = Math.ceil((1 - slimeRatio) * 200);
             const green = 200;
