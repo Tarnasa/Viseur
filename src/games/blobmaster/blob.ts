@@ -37,6 +37,7 @@ export class Blob extends makeRenderable(GameObject, SHOULD_RENDER) {
     public blob3Sprite: PIXI.Sprite;
     public hardened1: PIXI.Sprite;
     public hardened3: PIXI.Sprite;
+    public tileScale: number;
     // <<-- /Creer-Merge: variables -->>
 
     /**
@@ -65,6 +66,8 @@ export class Blob extends makeRenderable(GameObject, SHOULD_RENDER) {
         this.hardened1.visible = false;
         this.hardened3 = this.addSprite.hardened3();
         this.hardened3.visible = false;
+
+        this.tileScale = this.blob1Sprite.scale.x;
 
         if (state.tile) {
             this.container.position.set(state.tile.x, state.tile.y);
@@ -116,19 +119,17 @@ export class Blob extends makeRenderable(GameObject, SHOULD_RENDER) {
             this.blobmasterSprite.visible = true;
             this.blobmasterSprite.tint = rgb;
         } else {
+            const easedSize = ease(current.size, next.size, dt);
             if (current.size === 1) {
                 this.blob1Sprite.visible = true;
                 this.blob1Sprite.tint = rgb;
-            } else if (current.size === 3) {
-                this.blob3Sprite.visible = true;
-                this.blob3Sprite.tint = rgb;
-                this.blob3Sprite.scale.x = this.blob1Sprite.scale.x;
-                this.blob3Sprite.scale.y = this.blob1Sprite.scale.y;
+                this.blob1Sprite.scale.x = this.tileScale * easedSize;
+                this.blob1Sprite.scale.y = this.tileScale * easedSize;
             } else {
                 this.blob3Sprite.visible = true;
                 this.blob3Sprite.tint = rgb;
-                this.blob3Sprite.scale.x = this.blob1Sprite.scale.x * (current.size / 3);
-                this.blob3Sprite.scale.y = this.blob1Sprite.scale.y * (current.size / 3);
+                this.blob3Sprite.scale.x = this.tileScale * (easedSize / 3);
+                this.blob3Sprite.scale.y = this.tileScale * (easedSize / 3);
             }
         }
         if (!next.tile) {
