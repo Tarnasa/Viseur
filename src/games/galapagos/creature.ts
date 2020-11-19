@@ -32,7 +32,6 @@ export class Creature extends makeRenderable(GameObject, SHOULD_RENDER) {
 
     // <<-- Creer-Merge: variables -->>
     // You can add additional member variables here
-    public egg: PIXI.Sprite;
     public heart: PIXI.Sprite;
     public body: PIXI.Sprite;
     public head: PIXI.Sprite;
@@ -64,7 +63,6 @@ export class Creature extends makeRenderable(GameObject, SHOULD_RENDER) {
         // <<-- Creer-Merge: constructor -->>
         // You can initialize your new Creature here.
         this.container.setParent(this.game.layers.game);
-        this.egg = this.addSprite.egg({ visible: state.isEgg });
         this.heart = this.addSprite.heart({ visible: state.isEgg });
         this.body = this.addSprite.creatureMisc({
             index: 0,
@@ -118,7 +116,6 @@ export class Creature extends makeRenderable(GameObject, SHOULD_RENDER) {
         this.healthbar.scale.x /= 1.1;
         this.healthbar.scale.y *= 0.15;
         this.healthbar.anchor.y = 0;
-        //this.armor.texture = this.game.resources.armors.sheetTextures[Math.min(6, Math.ceil(state.defense * 6.0 / 10))]
         this.container.width = 1.1;
         this.container.height = 1.1;
         this.recolor();
@@ -155,7 +152,6 @@ export class Creature extends makeRenderable(GameObject, SHOULD_RENDER) {
             this.container.visible = false;
             return;
         }
-        this.egg.visible = next.isEgg;
         this.heart.visible = false;
         this.body.visible = !next.isEgg;
         this.neck.visible = !next.isEgg;
@@ -169,6 +165,7 @@ export class Creature extends makeRenderable(GameObject, SHOULD_RENDER) {
         this.spikes.visible = !next.isEgg;
         this.teeth.visible = !next.isEgg;
         this.tail.visible = !next.isEgg;
+        this.healthbar.visible = !next.isEgg;
         this.healthbar.texture = this.game.resources.healthbar.getTexture(
             this.rescaleRound(next.currentHealth, 0, next.maxHealth, 0, 9),
         );

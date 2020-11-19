@@ -12,7 +12,7 @@ import { GalapagosDelta, TileState } from "./state-interfaces";
 
 // <<-- Creer-Merge: should-render -->>
 // Set this variable to `true`, if this class should render.
-const SHOULD_RENDER = false;
+const SHOULD_RENDER = true;
 // <<-- /Creer-Merge: should-render -->>
 
 /**
@@ -31,7 +31,7 @@ export class Tile extends makeRenderable(GameObject, SHOULD_RENDER) {
 
     // <<-- Creer-Merge: variables -->>
     // You can add additional member variables here
-    //public dirt: PIXI.Sprite;
+    public egg: PIXI.Sprite;
     // <<-- /Creer-Merge: variables -->>
 
     /**
@@ -48,10 +48,9 @@ export class Tile extends makeRenderable(GameObject, SHOULD_RENDER) {
 
         // <<-- Creer-Merge: constructor -->>
         // You can initialize your new Tile here.
-        //this.container.setParent(this.game.layers.background);
-        //this.dirt = this.addSprite.grounds({index: 0});
-        //this.dirt.visible = true;
-        //this.container.position.set(state.x, state.y);
+        this.container.setParent(this.game.layers.eggs);
+        this.egg = this.addSprite.egg({ visible: false });
+        this.container.position.set(state.x, state.y);
         // <<-- /Creer-Merge: constructor -->>
     }
 
@@ -81,6 +80,7 @@ export class Tile extends makeRenderable(GameObject, SHOULD_RENDER) {
 
         // <<-- Creer-Merge: render -->>
         // render where the Tile is
+        this.egg.visible = !!next.egg;
         // <<-- /Creer-Merge: render -->>
     }
 
