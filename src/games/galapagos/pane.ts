@@ -53,7 +53,15 @@ export class Pane extends BasePane<GameState, PlayerState> {
         super.getPlayersScores(state);
 
         // <<-- Creer-Merge: get-player-scores -->>
-        return undefined; // change to return the states scores for each player
+        const scores = [] as number[];
+        for (const player of state.players) {
+            let total = 0;
+            for (const creature of player.creatures) {
+                total += creature.currentHealth;
+            }
+            scores.push(total);
+        }
+        return scores;
         // <<-- /Creer-Merge: get-player-scores -->>
     }
 
@@ -91,6 +99,32 @@ export class Pane extends BasePane<GameState, PlayerState> {
 
         // <<-- Creer-Merge: player-stats -->>
         // add stats for players to show up here
+        // bug, leaf, heartbeat, heart, hand-lizard-o, shield, paw
+        stats.push({
+            title: "carnivorism",
+            icon: "hand-lizard-o",
+            get: (player) => this.getCarnivorism(player),
+        });
+        stats.push({
+            title: "herbivorism",
+            icon: "leaf",
+            get: (player) => this.getHerbivorism(player),
+        });
+        stats.push({
+            title: "defense",
+            icon: "shield",
+            get: (player) => this.getDefense(player),
+        });
+        stats.push({
+            title: "speed",
+            icon: "paw",
+            get: (player) => this.getSpeed(player),
+        });
+        stats.push({
+            title: "endurance",
+            icon: "heart",
+            get: (player) => this.getEndurance(player),
+        });
         // <<-- /Creer-Merge: player-stats -->>
 
         return stats;
@@ -98,5 +132,40 @@ export class Pane extends BasePane<GameState, PlayerState> {
 
     // <<-- Creer-Merge: functions -->>
     // add more functions for your pane here
+    private getCarnivorism(player: PlayerState) {
+        let total = 0;
+        for (const creature of player.creatures) {
+            total += creature.carnivorism;
+        }
+        return (total / player.creatures.length).toFixed(1);
+    }
+    private getHerbivorism(player: PlayerState) {
+        let total = 0;
+        for (const creature of player.creatures) {
+            total += creature.herbivorism;
+        }
+        return (total / player.creatures.length).toFixed(1);
+    }
+    private getDefense(player: PlayerState) {
+        let total = 0;
+        for (const creature of player.creatures) {
+            total += creature.defense;
+        }
+        return (total / player.creatures.length).toFixed(1);
+    }
+    private getSpeed(player: PlayerState) {
+        let total = 0;
+        for (const creature of player.creatures) {
+            total += creature.speed;
+        }
+        return (total / player.creatures.length).toFixed(1);
+    }
+    private getEndurance(player: PlayerState) {
+        let total = 0;
+        for (const creature of player.creatures) {
+            total += creature.endurance;
+        }
+        return (total / player.creatures.length).toFixed(1);
+    }
     // <<-- /Creer-Merge: functions -->>
 }
