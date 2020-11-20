@@ -406,6 +406,9 @@ export class PlaybackPane extends BaseElement {
      */
     private updateSpeedSetting(): void {
         if (this.viseur) {
+            if (this.element.hasClass("playing")) {
+                this.events.playPause.emit();
+            }
             this.viseur.settings.playbackSpeed.set(this.getSpeedFromSlider());
         }
     }
