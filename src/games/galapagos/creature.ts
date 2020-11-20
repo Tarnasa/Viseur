@@ -119,6 +119,9 @@ export class Creature extends makeRenderable(GameObject, SHOULD_RENDER) {
         this.container.width = 1.1;
         this.container.height = 1.1;
         this.recolor();
+        if (state.owner.id == "0") {
+            this.container.scale.x = -1;
+        }
         // <<-- /Creer-Merge: constructor -->>
     }
 
@@ -174,6 +177,9 @@ export class Creature extends makeRenderable(GameObject, SHOULD_RENDER) {
             ease(current.tile.x, next.tile.x, dt),
             ease(current.tile.y, next.tile.y, dt),
         );
+        if (next.owner.id == "0") {
+            this.container.x += 1;
+        }
         if (!current.tile && next.parents && next.parents.length == 2) {
             this.heart.visible = true;
             this.heart.position.x =
