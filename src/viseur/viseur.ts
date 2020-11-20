@@ -51,7 +51,10 @@ export interface MergedDelta {
     index: number;
 
     /** The current state at that delta, what we are moving from. */
-    currentState?: DeltaMergeableGameState;
+    currentState?: CadreBaseGame;
+
+    /** The deltas index of the next turn. */
+    indexOfNextTurn: number;
 
     /** The next state of that delta, what we are moving to. */
     nextState?: DeltaMergeableGameState;
@@ -521,6 +524,7 @@ export class Viseur {
             // clone the current game state into an empty object
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             nextState: this.parser.mergeDelta({} as any, delta.game),
+            indexOfNextTurn: 0,
         };
 
         if (!this.joueur && gamelog.deltas.length > 0) {
@@ -567,16 +571,7 @@ export class Viseur {
      * @param index - The new states index, must be between [0, deltas.length].
      */
     private updateCurrentStateAsync(index: number): void {
-        if (Math.abs(index - this.mergedDelta.index) > 25) {
-            // it will take a long time to load, so display a loading modal
-            this.gui.modalMessage("Loading game state...", () => {
-                this.updateCurrentState(index);
-                this.gui.hideModal();
-            });
-        } else {
-            // just do it synchronously
-            this.updateCurrentState(index);
-        }
+        this.updateCurrentState(index);
     }
 
     /**
@@ -587,6 +582,21 @@ export class Viseur {
      * @param index - The new states index, must be between [0, deltas.length].
      */
     private updateCurrentState(index: number): void {
+        if (this.settings.playbackMode.get() == "turns") {
+            this.updateCurrentTurn(index);
+        } else {
+            this.updateCurrentDelta(index);
+        }
+    }
+
+    /**
+     * Brings the current state & next state to the one at the specified index.
+     * If the current and passed in indexes are far apart this operation can
+     * take a decent chunk of time...
+     *
+     * @param index - The new states index, must be between [0, deltas.length].
+     */
+    private updateCurrentDelta(index: number): void {
         if (!this.rawGamelog) {
             throw new Error(
                 "cannot update current state deltas without a gamelog",
@@ -682,6 +692,151 @@ export class Viseur {
         }
 
         if (indexChanged) {
+            this.updateStepped(d);
+            this.events.stateChanged.emit(this.currentState);
+        }
+    }
+
+    /**
+     * Gets the turn number from the current game state, or -1.
+     *
+     * @param state - The state to retrieve the turn number from.
+     * @returns Turn number of the given state.
+     */
+    private getTurnNumber(state: CadreBaseGame): number {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        if (state["currentTurn"] === undefined) {
+            return -1;
+        }
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        return state["currentTurn"] as number;
+    }
+
+    /**
+     * Brings the current state & next state to the one at the specified turn.
+     * If the current and passed in turns are far apart this operation can
+     * take a decent chunk of time...
+     *
+     * @param turn - The new state's turn.
+     */
+    private updateCurrentTurn(turn: number): void {
+        if (!this.rawGamelog) {
+            throw new Error(
+                "cannot update current state deltas without a gamelog",
+            );
+        }
+
+        const d = this.mergedDelta;
+        const deltas = this.rawGamelog.deltas;
+
+        if (turn < 0) {
+            this.currentState.game = d.currentState;
+            this.currentState.nextGame = d.nextState;
+            this.currentState.delta = undefined;
+            return;
+        }
+
+        const originalIndex = d.index;
+        d.currentState = (d.currentState || {}) as CadreBaseGame;
+        let currentTurn = this.getTurnNumber(d.currentState);
+
+        // Update current state backward to the previous turn
+        // We will then move forward so that we land on the first delta of the current turn
+        while (turn - 1 < currentTurn && d.index > 0) {
+            const r = deltas[d.index] && deltas[d.index].reversed;
+
+            if (r) {
+                d.currentState = this.parser.mergeDelta(
+                    d.currentState,
+                    // eslint-disable-next-line @typescript-eslint/ban-types
+                    r as {},
+                );
+                currentTurn = this.getTurnNumber(d.currentState);
+            }
+
+            d.index--;
+        }
+
+        // Update current state forward
+        while (turn > currentTurn) {
+            d.index++;
+
+            // Stop if there are no more deltas
+            if (!deltas[d.index]) {
+                break;
+            }
+
+            if (deltas[d.index] && !deltas[d.index].reversed) {
+                deltas[d.index].reversed = this.parser.createReverseDelta(
+                    // eslint-disable-next-line @typescript-eslint/ban-types
+                    d.currentState as {},
+                    deltas[d.index].game,
+                );
+            }
+
+            if (deltas[d.index]) {
+                d.currentState = this.parser.mergeDelta(
+                    d.currentState,
+                    deltas[d.index].game,
+                );
+                currentTurn = this.getTurnNumber(d.currentState);
+            }
+        }
+
+        // Update next state
+        if (!d.nextState) {
+            throw new Error("no next state");
+        }
+        let nextTurn = this.getTurnNumber(d.nextState);
+        // Update next state backward to the current turn
+        // We will then move forward so that we land on the first delta of the next turn
+        while (turn < nextTurn && d.indexOfNextTurn > 0) {
+            const r =
+                deltas[d.indexOfNextTurn] &&
+                deltas[d.indexOfNextTurn].reversed;
+
+            if (r) {
+                // eslint-disable-next-line @typescript-eslint/ban-types
+                d.nextState = this.parser.mergeDelta(d.nextState, r as {});
+                nextTurn = this.getTurnNumber(d.nextState);
+            }
+
+            d.indexOfNextTurn--;
+        }
+        // Now move forward to the first of the next turn
+        while (nextTurn < turn + 1) {
+            d.indexOfNextTurn++;
+
+            // Stop if there are no more deltas
+            if (!deltas[d.indexOfNextTurn]) {
+                break;
+            }
+
+            if (
+                deltas[d.indexOfNextTurn] &&
+                !deltas[d.indexOfNextTurn].reversed
+            ) {
+                deltas[
+                    d.indexOfNextTurn
+                ].reversed = this.parser.createReverseDelta(
+                    // eslint-disable-next-line @typescript-eslint/ban-types
+                    d.nextState as {},
+                    deltas[d.indexOfNextTurn].game,
+                );
+            }
+
+            if (deltas[d.indexOfNextTurn]) {
+                d.nextState = this.parser.mergeDelta(
+                    d.nextState,
+                    deltas[d.indexOfNextTurn].game,
+                );
+                nextTurn = this.getTurnNumber(d.nextState);
+            }
+        }
+
+        if (d.index != originalIndex) {
             this.updateStepped(d);
             this.events.stateChanged.emit(this.currentState);
         }

@@ -40,6 +40,9 @@ export class TimeManager {
     /** The gamelog we are counting deltas for. */
     private gamelog: Immutable<ViseurGamelog> | undefined;
 
+    /** The number of turns in our gamelog. */
+    private turnsInGamelog = 0;
+
     /** The timer we use to count up or down the index. */
     private readonly timer: Timer;
 
@@ -59,6 +62,10 @@ export class TimeManager {
             this.timer.setSpeed(newSpeed);
         });
 
+        viseur.settings.playbackMode.changed.on(() => {
+            this.updateTimescale();
+        });
+
         viseur.events.ready.on(({ gamelog }) => {
             this.ready(gamelog);
         });
@@ -74,6 +81,52 @@ export class TimeManager {
             index: this.currentIndex,
             dt: this.timer.getProgress(),
         };
+    }
+
+    /**
+     * Changes the current index to closely match the current viewing position,
+     * while obeying the new playback mode.
+     */
+    private updateTimescale(): void {
+        // TODO: Look at state to get current turn
+        this.setTime(0, 0);
+    }
+
+    /**
+     * Runs through every delta in the gamelog to find the maximal turn number.
+     *
+     * @param gamelog - To get the number of turns from.
+     * @returns The number of turns in the gamelog.
+     */
+    private getNumberOfTurnsInGamelog(
+        gamelog: Immutable<ViseurGamelog>,
+    ): number {
+        let turns = -1;
+        for (const delta of gamelog.deltas) {
+            if (
+                delta.game &&
+                delta.game.currentTurn !== undefined &&
+                (delta.game.currentTurn as number) > turns
+            ) {
+                turns = delta.game.currentTurn as number;
+            }
+        }
+        return turns + 1;
+    }
+
+    /**
+     * Gets the number of deltas or turns from gamelog depending on playback
+     * mode.
+     *
+     * @param gamelog - To get deltas/turns from.
+     * @returns The maximum number of deltas/turns.
+     */
+    private getNumberOfTimepoints(gamelog: Immutable<Gamelog>): number {
+        if (this.viseur.settings.playbackMode.get() == "turns") {
+            return this.turnsInGamelog;
+        } else {
+            return gamelog.deltas.length;
+        }
     }
 
     /**
@@ -116,6 +169,7 @@ export class TimeManager {
      */
     private ready(gamelog: Immutable<Gamelog>): void {
         this.gamelog = gamelog;
+        this.turnsInGamelog = this.getNumberOfTurnsInGamelog(this.gamelog);
 
         this.ticked(true);
 
@@ -141,8 +195,12 @@ export class TimeManager {
             }
         });
 
-        this.viseur.events.gamelogUpdated.on((updated) => {
-            if (this.currentIndex < updated.deltas.length) {
+        this.viseur.events.gamelogLoaded.on((gamelog) => {
+            this.turnsInGamelog = this.getNumberOfTurnsInGamelog(gamelog);
+        });
+        this.viseur.events.gamelogUpdated.on((gamelog) => {
+            this.turnsInGamelog = this.getNumberOfTurnsInGamelog(gamelog);
+            if (this.currentIndex < this.getNumberOfTimepoints(gamelog) - 1) {
                 this.play();
             }
         });
@@ -155,7 +213,8 @@ export class TimeManager {
         if (
             !this.timer.isTicking() &&
             this.gamelog &&
-            this.currentIndex === this.gamelog.deltas.length - 1 &&
+            this.currentIndex ===
+                this.getNumberOfTimepoints(this.gamelog) - 1 &&
             this.timer.getProgress() > 0.99
         ) {
             // then wrap around to the start
@@ -181,7 +240,7 @@ export class TimeManager {
         // check if we need to pause and go back a very small amount
         const backPause =
             this.gamelog.streaming &&
-            this.currentIndex === this.gamelog.deltas.length;
+            this.currentIndex === this.getNumberOfTimepoints(this.gamelog) - 1;
 
         if (!backPause) {
             this.events.newIndex.emit(this.currentIndex);
@@ -193,7 +252,7 @@ export class TimeManager {
         }
 
         if (!start) {
-            if (this.currentIndex < this.gamelog.deltas.length) {
+            if (this.currentIndex < this.getNumberOfTimepoints(this.gamelog)) {
                 this.timer.restart();
             } else {
                 this.pause(this.currentIndex, 0);
